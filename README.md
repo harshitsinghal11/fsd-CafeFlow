@@ -134,7 +134,7 @@ Primary Table: `orders`
 
 Key Fields:
 
-* order_number (auto-increment starting from 100)
+* order_no (auto-increment starting from 100)
 * customer_name
 * customer_phone (validated 10 digits)
 * items (JSONB)
@@ -175,8 +175,10 @@ Create `.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-ADMIN_PIN=your_secure_pin
+ADMIN_SECRET_PIN=your_secure_pin
 ```
+
+Legacy fallback supported in code: `ADMIN_PIN`
 
 Do not commit `.env.local` to GitHub.
 

@@ -1,19 +1,17 @@
 "use client"; // Required for accessing Cart Store
 
-import Image from "next/image";
 import Link from "next/link";
-import { PackageOpen, ShoppingBag, User } from "lucide-react";
+import { PackageOpen, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/src/store/cartStore";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Navbar() {
-  const [mounted, setMounted] = useState(false);
-  const totalItems = useCartStore((state) => state.getTotalItems());
-
-  // Prevent Hydration Error (wait for client to load before showing number)
   useEffect(() => {
-    setMounted(true);
+    void useCartStore.persist?.rehydrate?.();
   }, []);
+
+  const isHydrated = useCartStore.persist?.hasHydrated?.() ?? false;
+  const totalItems = useCartStore((state) => state.getTotalItems());
 
   return (
     // Container: Transparent, Fixed at top
@@ -45,7 +43,7 @@ export default function Navbar() {
           <ShoppingBag size={24} />
 
           {/* Badge: Show only if items exist */}
-          {mounted && totalItems > 0 && (
+          {isHydrated && totalItems > 0 && (
             <span className="absolute -top-2 -right-2 bg-[#DA944B] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm border border-white">
               {totalItems}
             </span>

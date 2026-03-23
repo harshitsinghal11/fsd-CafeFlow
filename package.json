@@ -1,7 +1,19 @@
 {
-  "name": "arabica-coffee",
+  "name": "cafeflow",
   "version": "0.1.0",
   "private": true,
+  "description": "Smart Cafe Odering System in KANBAN-Style",
+  "homepage": "https://github.com/harshitsinghal11/cafeflow#readme",
+  "bugs": {
+    "url": "https://github.com/harshitsinghal11/cafeflow/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshitsinghal11/cafeflow.git"
+  },
+  "license": "ISC",
+  "author": "Harshit Singhal",
+  "main": "index.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

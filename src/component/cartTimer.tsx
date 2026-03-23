@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 export default function CartTimer() {
   const router = useRouter();
-  const { expiryTime, checkExpiry, clearCart } = useCartStore();
+  const { expiryTime, checkExpiry } = useCartStore();
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isUrgent, setIsUrgent] = useState(false);
 

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { BarChart2, ChefHat, Clock, House, LogOut, RefreshCw } from "lucide-react";
+import { BarChart2, ChefHat, Clock, House, LogOut } from "lucide-react";
 import { adminLogout } from "@/src/actions";
+import type { Order, OrderStatus } from "@/src/types/models";
 
 // Import Components
 import ActiveOrderCard from "@/src/component/admin/ActiveOrderCard";
@@ -17,45 +18,61 @@ const supabase = createClient(
 );
 
 export default function AdminPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 2. Add State for Filtering ('all', 'completed', 'cancelled')
   const [filter, setFilter] = useState('all');
-
-  useEffect(() => {
-    fetchOrders();
-    const channel = supabase
-      .channel('realtime orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchOrders();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
 
   const fetchOrders = async () => {
     const { data } = await supabase
       .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) setOrders(data);
+
+    if (data) {
+      setOrders(data as Order[]);
+    }
+
     setLoading(false);
   };
 
-  const updateStatus = async (id: string, newStatus: string) => {
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchOrders();
+    }, 0);
+
+    const channel = supabase
+      .channel('realtime orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        void fetchOrders();
+      })
+      .subscribe();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const updateStatus = async (id: string, newStatus: OrderStatus) => {
     setOrders(current => current.map(o => o.id === id ? { ...o, status: newStatus } : o));
     const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", id);
-    if (error) { alert("Error updating order"); fetchOrders(); }
+    if (error) { alert("Error updating order"); void fetchOrders(); }
   };
 
   // --- FILTERING LOGIC ---
-  const activeOrders = orders.filter(o => o.status === 'pending');
+  const activeOrders = orders
+    .filter((o) => o.status === "pending" || o.status === "preparing")
+    .sort((a, b) => {
+      if (a.status === b.status) return 0;
+      return a.status === "pending" ? -1 : 1;
+    });
 
   // 3. Apply Filter to History
   const historyOrders = orders.filter(o => {
-    // First, exclude pending (active) orders
-    if (o.status === 'pending') return false;
+    // Exclude active orders from history
+    if (o.status !== "completed" && o.status !== "cancelled") return false;
 
     // Then apply the user's selection
     if (filter === 'all') return true;
@@ -92,7 +109,7 @@ export default function AdminPage() {
 
         {/* ACTIVE ORDERS */}
         <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <ChefHat className="text-[#DA944B]" /> Pending Orders ({activeOrders.length})
+          <ChefHat className="text-[#DA944B]" /> Active Orders ({activeOrders.length})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {activeOrders.map((order) => (
@@ -101,7 +118,7 @@ export default function AdminPage() {
           {activeOrders.length === 0 && (
             <div className="col-span-full py-16 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
               <ChefHat size={48} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-400 font-medium">No pending orders.</p>
+              <p className="text-gray-400 font-medium">No active orders.</p>
             </div>
           )}
         </div>

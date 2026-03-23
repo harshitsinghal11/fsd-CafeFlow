@@ -2,7 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
-export default function MenuCategoryCard({ title, imageSrc, href }: any) {
+interface MenuCategoryCardProps {
+  title: string;
+  imageSrc: string;
+  href: string;
+}
+
+export default function MenuCategoryCard({ title, imageSrc, href }: MenuCategoryCardProps) {
   return (
     <Link href={href} className="w-full max-w-sm mx-auto group block">
       <div className="relative h-48 mt-8"> 

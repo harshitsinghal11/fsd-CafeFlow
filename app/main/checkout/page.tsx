@@ -96,9 +96,10 @@ export default function CheckoutPage() {
     history.push({ id: data.order_no, date: new Date().toISOString() });
     localStorage.setItem("my_orders", JSON.stringify(history));
 
-  } catch (err: any) {
-    console.error("Order Failed:", err.message);
-    alert("Order failed! " + err.message);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    console.error("Order Failed:", errorMessage);
+    alert("Order failed! " + errorMessage);
   } finally {
     setLoading(false);
   }

@@ -1,12 +1,14 @@
 "use client";
 import { useCartStore } from "@/src/store/cartStore"; // <--- Import Store
+import type { MenuItem } from "@/src/types/models";
 
 interface MenuItemProps {
-  item: any;
+  item: MenuItem;
 }
 
 export default function MenuItemCard({ item }: MenuItemProps) {
-  const hasLarge = item.price_l !== null && item.price_l > 0;
+  const largePrice = item.price_l ?? 0;
+  const hasLarge = largePrice > 0;
   
   // 1. Get the 'addItem' function from our store
   const addItem = useCartStore((state) => state.addItem);
@@ -51,10 +53,10 @@ export default function MenuItemCard({ item }: MenuItemProps) {
 
               <button 
                 className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-[#653100] text-white shadow-lg hover:bg-[#DA944B] active:scale-95 transition-all"
-                onClick={() => handleAdd("L", item.price_l)} // <--- CONNECTED
+                onClick={() => handleAdd("L", largePrice)} // <--- CONNECTED
               >
                 <span className="text-[10px] font-bold opacity-80 uppercase">Large</span>
-                <span className="text-sm font-black">₹{item.price_l}</span>
+                <span className="text-sm font-black">₹{largePrice}</span>
               </button>
             </div>
           ) : (
