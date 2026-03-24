@@ -2,17 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/src/store/cartStore";
-import { createClient } from "@supabase/supabase-js";
 import CartTimer from "@/src/component/cartTimer";
 import { Trash2, ArrowLeft, CheckCircle, Coffee } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-// Initialize Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -66,26 +59,25 @@ export default function CheckoutPage() {
       quantity: item.quantity
     }));
 
-    // 5. Insert into Supabase
-    const { data, error } = await supabase
-      .from("orders")
-      .insert([
-        {
-          customer_name: name,
-          customer_phone: cleanPhone, 
-          items: orderItems, 
-          // Database expects Integer (int4), so we round it to be safe
-          total_amount: Math.round(getTotalPrice()), 
-          status: "pending", // Make sure your DB Enum includes 'pending'
-        },
-      ])
-      .select()
-      .single();
+    // 5. Place order through protected API route
+    const response = await fetch("/api/orders/place", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer_name: name,
+        customer_phone: cleanPhone,
+        items: orderItems,
+        total_amount: Math.round(getTotalPrice()),
+      }),
+    });
 
-    if (error) throw error;
+    const payload = (await response.json()) as { order_no?: number; error?: string };
+    if (!response.ok || !payload.order_no) {
+      throw new Error(payload.error ?? "Unable to place order.");
+    }
 
     // 6. Success!
-    setOrderSuccess(data.order_no); // This comes from your 'order_no' column
+    setOrderSuccess(payload.order_no); // This comes from your 'order_no' column
 
     // 7. Clear the cart & timer
     clearCart();
@@ -93,7 +85,7 @@ export default function CheckoutPage() {
     // 8. Save to Local History (For "My Orders" feature later)
     const history = JSON.parse(localStorage.getItem("my_orders") || "[]");
     // We save an object with ID and Date
-    history.push({ id: data.order_no, date: new Date().toISOString() });
+    history.push({ id: payload.order_no, date: new Date().toISOString() });
     localStorage.setItem("my_orders", JSON.stringify(history));
 
   } catch (err: unknown) {

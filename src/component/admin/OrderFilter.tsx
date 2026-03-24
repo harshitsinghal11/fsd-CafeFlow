@@ -1,14 +1,15 @@
 import { Filter, CheckCircle, Ban, Layers } from "lucide-react";
+import type { HistoryFilter } from "@/src/utils/orderFilters";
 
 interface Props {
-  currentFilter: string;
-  setFilter: (filter: string) => void;
+  currentFilter: HistoryFilter;
+  setFilter: (filter: HistoryFilter) => void;
 }
 
 export default function OrderFilter({ currentFilter, setFilter }: Props) {
   
   // Helper to stylize the active button
-  const getButtonClass = (filterName: string, activeColor: string) => {
+  const getButtonClass = (filterName: HistoryFilter, activeColor: string) => {
     const isActive = currentFilter === filterName;
     return `flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all border ${
       isActive 

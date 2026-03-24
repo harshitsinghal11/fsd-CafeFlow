@@ -1,254 +1,156 @@
-# Cafeflow ☕
-**Digital Order-to-Cup Management System**
+# CafeFlow
 
-Cafeflow is a full-stack real-time coffee shop ordering system built with **Next.js 15 (App Router)** and **Supabase**.
-It connects customers and kitchen staff through a seamless, token-based workflow without requiring user accounts.
+CafeFlow is a full-stack cafe ordering system built with Next.js and Supabase.
+It supports guest ordering, token-based fulfillment, order tracking by phone, and a protected admin panel.
 
-The system eliminates manual token handling, reduces queue friction, and provides a live operational dashboard.
+## Features
 
----
+### Customer Flow
 
-## Project Objective
+- Browse categories:
+  - Cold Coffee
+  - Thick Shakes
+  - Mocktails
+- Add items to persisted cart (Zustand)
+- 10-minute cart expiry timer
+- Checkout with:
+  - customer name
+  - 10-digit phone number
+- Receive generated token (`order_no`)
+- Track order history by phone number
 
-Traditional coffee shop ordering systems suffer from:
+### Admin Flow
 
-* Long queues
-* Manual token management
-* No real-time kitchen visibility
-* Unnecessary login friction
+- PIN-based admin login
+- Signed admin session cookie
+- Route protection via `proxy.ts`
+- Backend-protected admin APIs:
+  - `GET/PATCH /api/admin/orders`
+  - `GET /api/admin/analytics`
+- Customer APIs (same-origin):
+  - `POST /api/orders/place`
+  - `GET /api/orders/lookup?phone=XXXXXXXXXX`
+- Order workflow:
+  - `pending -> preparing -> completed`
+  - cancellation support
+- History filters (`all`, `completed`, `cancelled`)
+- Weekly analytics cards + daily breakdown
 
-Cafeflow provides:
+## Security Model
 
-* Guest ordering (no signup required)
-* Auto-generated token system (starting from #100)
-* Real-time kitchen dashboard
-* Order tracking via phone number
-* Sales analytics for administrators
-
----
+- Admin session cookie is signed (HMAC) and verified in `proxy.ts`.
+- Admin data and status updates are performed through server routes protected by cookie verification.
+- Supabase schema includes:
+  - RLS enabled
+  - restricted public insert policy for orders
+  - no direct anonymous update/delete on orders
+  - controlled RPC for phone-based order lookup (`get_orders_by_phone`)
 
 ## Tech Stack
 
-Frontend
-
-* Next.js 15 (App Router)
-* TypeScript
-* Tailwind CSS
-* Lucide React Icons
-
-State Management
-
-* Zustand (with LocalStorage persistence)
-
-Backend & Database
-
-* Supabase (PostgreSQL)
-* Supabase Realtime Channels
-
-Authentication
-
-* Custom Admin PIN (Cookie-based session)
-* Middleware route protection
-
----
-
-## Folder Structure
-
-```
-cafeflow/
-│
-├── app/                # App Router pages
-├── src/                # Utilities, store, logic
-├── public/             # Static assets
-├── assets/             # Documentation & SQL schema
-│   ├── Cafeflow_Documentation.pdf
-│   └── DATABASE.sql
-│
-├── middleware.ts       # Admin route protection
-├── .env.local          # Environment variables (ignored)
-└── README.md
-```
-
----
-
-## Core Features
-
-### Digital Menu
-
-* Categorized coffee and beverage display
-* Add-to-cart functionality
-* Floating cart interface
-
-### Smart Cart Expiry
-
-* 10-minute reservation timer
-* Automatic cart reset on expiry
-* Prevents inventory blocking
-
-### Guest Checkout
-
-* No authentication required
-* Requires:
-
-  * Customer Name
-  * 10-digit phone number
-* Generates auto-incremented order number (starting from 100)
-
-### Real-Time Kitchen Dashboard
-
-Kanban-style interface:
-
-* Pending (Yellow)
-* Preparing (Blue)
-* Completed (Green)
-* Cancelled (Red)
-
-Features:
-
-* Live order updates via Supabase Realtime
-* Optimistic UI updates
-* Order filtering & history view
-
-### Order Tracking
-
-Customers can:
-
-* Enter phone number
-* View order status
-* Access past order history
-
-### Sales Analytics
-
-Admin dashboard includes:
-
-* Weekly revenue
-* Daily breakdown (Mon–Sun)
-* Today's performance highlight
-* Server-side aggregation
-
----
-
-## Database Overview
-
-Primary Table: `orders`
-
-Key Fields:
-
-* order_no (auto-increment starting from 100)
-* customer_name
-* customer_phone (validated 10 digits)
-* items (JSONB)
-* total_amount
-* status (enum)
-* created_at
-
-Status Enum:
-
-* pending
-* preparing
-* completed
-* cancelled
-
-Full SQL schema available in:
-
-```
-assets/DATABASE.sql
-```
-
----
-
-## Security & Validation
-
-* `/admin` protected via `middleware.ts`
-* PIN-based authentication
-* Cookie session management
-* Regex validation for phone numbers
-* Required field validation during checkout
-* 24-hour admin session expiry
-
----
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Supabase (PostgreSQL)
+- Zustand
+- Vitest (unit tests)
 
 ## Environment Variables
 
 Create `.env.local`:
 
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ADMIN_SECRET_PIN=your_admin_pin
+ADMIN_SESSION_SECRET=long_random_secret_for_cookie_signing
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-ADMIN_SECRET_PIN=your_secure_pin
+
+Legacy fallback supported:
+
+```env
+ADMIN_PIN=your_admin_pin
 ```
 
-Legacy fallback supported in code: `ADMIN_PIN`
+Notes:
 
-Do not commit `.env.local` to GitHub.
+- `SUPABASE_SERVICE_ROLE_KEY` must never be exposed to client code.
+- `ADMIN_SESSION_SECRET` should be different from the admin PIN.
+- You can copy from [`.env.example`](./.env.example).
 
----
+## Setup
 
-## Getting Started
+1. Install packages:
 
-Install dependencies:
-
-```
+```bash
 npm install
 ```
 
-Run development server:
+2. Apply database schema:
 
-```
+- Open Supabase SQL Editor
+- Run [`assets/DATABASE.sql`](./assets/DATABASE.sql)
+
+3. Seed `menu_items` with your menu data.
+
+4. Start dev server:
+
+```bash
 npm run dev
 ```
 
-Open:
+## Commands
 
+- Lint: `npm run lint`
+- Test: `npm run test`
+- Build: `npm run build`
+- Start production: `npm run start`
+
+## Routes
+
+- `/` Home
+- `/main/menu/cold-coffee`
+- `/main/menu/thick-shakes`
+- `/main/menu/mocktails`
+- `/main/checkout`
+- `/main/my-orders`
+- `/admin/login`
+- `/admin`
+- `/admin/analytics`
+
+## Troubleshooting
+
+- `net::ERR_NAME_NOT_RESOLVED` in browser:
+  - Customer pages now call local API routes, so this should no longer appear for Supabase RPC URLs.
+  - If an order request still fails, verify:
+    - `NEXT_PUBLIC_SUPABASE_URL` is correct (`https://<project-ref>.supabase.co`)
+    - internet/DNS access can resolve the Supabase host
+- `Multiple GoTrueClient instances detected` warning:
+  - Removed by avoiding browser-side Supabase clients in customer flows.
+
+## Project Structure
+
+```text
+cafeflow/
+|-- app/
+|   |-- api/
+|   |-- admin/
+|   `-- main/
+|-- src/
+|   |-- component/
+|   |-- store/
+|   |-- types/
+|   `-- utils/
+|-- assets/
+|   `-- DATABASE.sql
+|-- proxy.ts
+`-- README.md
 ```
-http://localhost:3000
-```
 
-Admin dashboard:
+## Testing Coverage (Current)
 
-```
-http://localhost:3000/admin
-```
-
-Build for production:
-
-```
-npm run build
-npm start
-```
-
----
-
-## Usage Rules
-
-* Cart expires after 10 minutes
-* Phone number must be exactly 10 digits
-* Admin session auto-expires after 24 hours
-* Order history retained for analytics
-
----
-
-## Deployment
-
-Recommended:
-
-* Vercel (Frontend)
-* Supabase (Database & Realtime)
-
----
-
-## Future Improvements
-
-* Payment gateway integration
-* SMS notifications
-* Inventory tracking
-* Multi-branch support
-* Role-based staff management
-
----
-
-## License
-
-This project is built for educational and portfolio purposes.
-
----
+- Admin session token generation/verification
+- Order status filtering and active/history separation
+- Weekly analytics aggregation logic

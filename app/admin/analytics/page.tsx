@@ -1,71 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { ArrowLeft, Calendar, BarChart3 } from "lucide-react";
 import Link from "next/link";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-type Weekday =
-  | "Sunday"
-  | "Monday"
-  | "Tuesday"
-  | "Wednesday"
-  | "Thursday"
-  | "Friday"
-  | "Saturday";
-
-interface DayStats {
-  count: number;
-  revenue: number;
-}
-
-interface AnalyticsStats {
-  daily: Record<Weekday, DayStats>;
-  weekTotal: number;
-  weekCount: number;
-}
-
-interface CompletedOrderRow {
-  total_amount: number;
-  created_at: string;
-}
-
-const allDays: Weekday[] = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const displayOrder: Weekday[] = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-function getInitialDailyStats(): Record<Weekday, DayStats> {
-  return {
-    Sunday: { count: 0, revenue: 0 },
-    Monday: { count: 0, revenue: 0 },
-    Tuesday: { count: 0, revenue: 0 },
-    Wednesday: { count: 0, revenue: 0 },
-    Thursday: { count: 0, revenue: 0 },
-    Friday: { count: 0, revenue: 0 },
-    Saturday: { count: 0, revenue: 0 },
-  };
-}
+import {
+  DISPLAY_DAYS,
+  getInitialDailyStats,
+  type AnalyticsStats,
+} from "@/src/utils/analytics";
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
@@ -75,46 +17,36 @@ export default function AnalyticsPage() {
     weekCount: 0,
   });
 
-  const calculateStats = async () => {
-    const { data } = await supabase
-      .from("orders")
-      .select("total_amount, created_at")
-      .eq("status", "completed");
-
-    const completedOrders = (data ?? []) as CompletedOrderRow[];
-    const dailyStats = getInitialDailyStats();
-    let totalRevenue = 0;
-    let totalOrders = 0;
-
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    completedOrders.forEach((order) => {
-      const orderDate = new Date(order.created_at);
-
-      if (orderDate >= startOfWeek) {
-        const dayName = allDays[orderDate.getDay()];
-
-        dailyStats[dayName].revenue += order.total_amount;
-        dailyStats[dayName].count += 1;
-        totalRevenue += order.total_amount;
-        totalOrders += 1;
-      }
-    });
-
-    setStats({
-      daily: dailyStats,
-      weekTotal: totalRevenue,
-      weekCount: totalOrders,
-    });
-    setLoading(false);
-  };
-
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void calculateStats();
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/admin/analytics", { cache: "no-store" });
+        if (response.status === 401) {
+          window.location.href = "/admin/login";
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          stats?: AnalyticsStats;
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Failed to load analytics.");
+        }
+
+        setStats(payload.stats ?? {
+          daily: getInitialDailyStats(),
+          weekTotal: 0,
+          weekCount: 0,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to load analytics.";
+        alert(message);
+      } finally {
+        setLoading(false);
+      }
     }, 0);
 
     return () => {
@@ -169,7 +101,7 @@ export default function AnalyticsPage() {
         </h2>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
-          {displayOrder.map((day) => {
+          {DISPLAY_DAYS.map((day) => {
             const dayData = stats.daily[day];
             const isToday =
               new Date().toLocaleDateString("en-US", { weekday: "long" }) === day;

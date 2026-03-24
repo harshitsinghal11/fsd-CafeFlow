@@ -1,41 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Clock, CheckCircle, Package, Phone, RefreshCw } from "lucide-react";
 import type { Order, OrderStatus } from "@/src/types/models";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function MyOrdersPage() {
-  const [phone, setPhone] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem("user_phone") ?? "";
-  });
+  // Keep initial state server/client identical to avoid hydration mismatch.
+  const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchOrders = async (phoneNumber: string) => {
     if (phoneNumber.length < 10) return;
     setLoading(true);
     setSearched(true);
+    setErrorMessage(null);
 
     localStorage.setItem("user_phone", phoneNumber);
 
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("customer_phone", phoneNumber)
-      .order("created_at", { ascending: false });
+    const response = await fetch(
+      `/api/orders/lookup?phone=${encodeURIComponent(phoneNumber)}`,
+      { cache: "no-store" }
+    );
+    const payload = (await response.json()) as { orders?: Order[]; error?: string };
 
-    if (data) {
-      setOrders(data as Order[]);
+    if (!response.ok) {
+      setErrorMessage(payload.error ?? "Unable to fetch orders right now.");
+      setOrders([]);
+      setLoading(false);
+      return;
     }
 
+    setOrders(payload.orders ?? []);
     setLoading(false);
   };
 
@@ -44,6 +42,7 @@ export default function MyOrdersPage() {
     if (!savedPhone) return;
 
     const timeoutId = window.setTimeout(() => {
+      setPhone(savedPhone);
       void fetchOrders(savedPhone);
     }, 0);
 
@@ -87,7 +86,10 @@ export default function MyOrdersPage() {
                 placeholder="Enter Phone (e.g. 9876543210)"
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#f8f8f8] border-none font-bold text-[#3a2008] focus:ring-2 focus:ring-[#DA944B]"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setPhone(value);
+                }}
                 maxLength={10}
               />
             </div>
@@ -101,7 +103,13 @@ export default function MyOrdersPage() {
           </form>
         </div>
 
-        {searched && !loading && orders.length === 0 && (
+        {errorMessage && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+            {errorMessage}
+          </div>
+        )}
+
+        {searched && !loading && orders.length === 0 && !errorMessage && (
           <div className="text-center py-10 opacity-50">
             <Package size={48} className="mx-auto mb-2 text-gray-300" />
             <p>No orders found for this number.</p>
