@@ -50,7 +50,14 @@ The project is built as a single Next.js codebase that handles both the customer
 
 ## Screenshots
 
-> _Screenshots can be added here once the app is deployed or running locally._
+<p align="center">
+  <img src="assets/home.png" alt="Home" width="900">
+</p>
+
+<p align="center">
+  <img src="assets/cart.png" alt="Cart" width="49%">
+  <img src="assets/footer.png" alt="Footer" width="49%">
+</p>
 
 ---
 
@@ -258,7 +265,7 @@ This project is open source and available under the [MIT License](./LICENSE).
 
 Built by **Harshit** — B.Tech CSE, Manav Rachna University
 
-- GitHub: [@your-github-handle](https://github.com/your-github-handle)
-- LinkedIn: [linkedin.com/in/your-profile](https://linkedin.com/in/your-profile)
+- [GitHub](https://github.com/harshitsinghal11)
+- [LinkedIn](https://linkedin.com/in/harshitsinghal11)
 
 > _Feel free to reach out if you're building something similar or have questions about the implementation._
