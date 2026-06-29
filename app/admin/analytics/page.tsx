@@ -1,60 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ArrowLeft, Calendar, BarChart3 } from "lucide-react";
 import Link from "next/link";
-import {
-  DISPLAY_DAYS,
-  getInitialDailyStats,
-  type AnalyticsStats,
-} from "@/src/utils/analytics";
+import { DISPLAY_DAYS } from "@/src/lib/analytics";
+import { useAnalytics } from "@/src/hooks/data/useAnalytics";
 
 export default function AnalyticsPage() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<AnalyticsStats>({
-    daily: getInitialDailyStats(),
-    weekTotal: 0,
-    weekCount: 0,
-  });
+  const { stats, isLoading } = useAnalytics();
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        const response = await fetch("/api/admin/analytics", { cache: "no-store" });
-        if (response.status === 401) {
-          window.location.href = "/admin/login";
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          stats?: AnalyticsStats;
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Failed to load analytics.");
-        }
-
-        setStats(payload.stats ?? {
-          daily: getInitialDailyStats(),
-          weekTotal: 0,
-          weekCount: 0,
-        });
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load analytics.";
-        alert(message);
-      } finally {
-        setLoading(false);
-      }
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-10 text-center text-gray-500 font-bold">
         Calculating Sales...
@@ -143,3 +97,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+

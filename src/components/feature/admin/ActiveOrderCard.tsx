@@ -1,5 +1,5 @@
-import { CheckCircle, User, Smartphone, XCircle, ChefHat } from "lucide-react";
-import type { Order, OrderStatus } from "@/src/types/models";
+﻿import { CheckCircle, User, Smartphone, XCircle, ChefHat } from "lucide-react";
+import type { Order, OrderStatus } from "@/src/types";
 
 interface Props {
   order: Order;
@@ -94,3 +94,4 @@ export default function ActiveOrderCard({ order, onUpdateStatus }: Props) {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import type { Order } from "@/src/types/models";
-import { createSupabasePublicServerClient } from "@/src/utils/supabasePublicServer";
+﻿import { NextResponse } from "next/server";
+import type { Order } from "@/src/types";
+import { createSupabasePublicServerClient } from "@/src/lib/supabasePublicServer";
 
 function normalizePhone(input: string): string {
   return input.replace(/\D/g, "");
@@ -61,3 +61,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

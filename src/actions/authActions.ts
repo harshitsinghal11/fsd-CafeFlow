@@ -7,7 +7,7 @@ import {
   ADMIN_SESSION_TTL_MS,
   createAdminSessionToken,
   getConfiguredAdminPin,
-} from "@/src/utils/adminSession";
+} from "@/src/lib/adminSession";
 
 export async function adminLogin(formData: FormData) {
   const pin = formData.get("pin")?.toString().trim();
@@ -29,7 +29,7 @@ export async function adminLogin(formData: FormData) {
 
     redirect("/admin");
   } else {
-    redirect("/admin/login?error=Invalid PIN");
+    redirect("/login?error=Invalid PIN");
   }
 }
 
@@ -41,5 +41,5 @@ export async function adminLogout() {
   cookieStore.delete(ADMIN_SESSION_COOKIE_NAME);
 
   // 2. Kick user back to login
-  redirect("/admin/login");
+  redirect("/login");
 }

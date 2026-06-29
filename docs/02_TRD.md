@@ -13,18 +13,24 @@
 - `app/`
   Contains route segments, layouts, pages, and API routes.
 - `app/api/`
-  Contains order and admin server endpoints.
+  Contains analytics and order GET endpoints.
+- `app/(auth)/`
+  Contains the admin login page.
 - `app/admin/`
-  Contains admin login, dashboard, and analytics pages.
+  Contains the dashboard and analytics pages.
 - `app/main/`
   Contains customer menu, checkout, and my orders pages.
-- `src/component/`
-  Contains shared customer and admin UI components.
+- `src/actions/`
+  Contains server actions for admin login, logout, order placement, and status updates.
+- `src/components/`
+  Contains UI components split into `layout/`, `shared/`, `feature/menu/`, and `feature/admin/`.
+- `src/hooks/data/`
+  Contains SWR data fetching hooks.
 - `src/store/`
   Contains the Zustand cart store.
 - `src/types/`
   Contains shared TypeScript models.
-- `src/utils/`
+- `src/lib/`
   Contains Supabase helpers, analytics logic, admin session utilities, and order filters.
 - `assets/DATABASE.sql`
   Contains the database schema and RLS setup.

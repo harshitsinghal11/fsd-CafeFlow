@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
   ADMIN_SESSION_COOKIE_NAME,
   verifyAdminSessionToken,
-} from "@/src/utils/adminSession";
-import { createSupabaseAdminClient } from "@/src/utils/supabaseAdmin";
-import { calculateWeeklyStats } from "@/src/utils/analytics";
+} from "@/src/lib/adminSession";
+import { createSupabaseAdminClient } from "@/src/lib/supabaseAdmin";
+import { calculateWeeklyStats } from "@/src/lib/analytics";
 
 async function requireAdminSession() {
   const cookieStore = await cookies();
@@ -38,3 +38,4 @@ export async function GET() {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

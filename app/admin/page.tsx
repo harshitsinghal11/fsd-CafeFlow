@@ -1,87 +1,47 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { BarChart2, ChefHat, Clock, House, LogOut } from "lucide-react";
-import { adminLogout } from "@/src/actions";
-import type { Order, OrderStatus } from "@/src/types/models";
+import { adminLogout } from "@/src/actions/authActions";
+import { updateOrderStatusAction } from "@/src/actions/orderActions";
+import type { OrderStatus } from "@/src/types";
 import {
   getActiveOrders,
   getHistoryOrders,
   type HistoryFilter,
-} from "@/src/utils/orderFilters";
-import ActiveOrderCard from "@/src/component/admin/ActiveOrderCard";
-import OrderHistoryTable from "@/src/component/admin/OrderHistoryTable";
-import OrderFilter from "@/src/component/admin/OrderFilter";
+} from "@/src/lib/orderFilters";
+import ActiveOrderCard from "@/src/components/feature/admin/ActiveOrderCard";
+import OrderHistoryTable from "@/src/components/feature/admin/OrderHistoryTable";
+import OrderFilter from "@/src/components/feature/admin/OrderFilter";
 import Link from "next/link";
+import { useOrders } from "@/src/hooks/data/useOrders";
 
 export default function AdminPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orders, isLoading, mutate } = useOrders(5000);
   const [filter, setFilter] = useState<HistoryFilter>("all");
 
-  const fetchOrders = useCallback(async (showLoader = false) => {
-    if (showLoader) setLoading(true);
-
-    try {
-      const response = await fetch("/api/admin/orders", { cache: "no-store" });
-      if (response.status === 401) {
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      const payload = (await response.json()) as { orders?: Order[]; error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to fetch orders.");
-      }
-
-      setOrders(payload.orders ?? []);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to fetch orders.";
-      alert(message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const initialLoadId = window.setTimeout(() => {
-      void fetchOrders(true);
-    }, 0);
-
-    const pollId = window.setInterval(() => {
-      void fetchOrders();
-    }, 5000);
-
-    return () => {
-      window.clearTimeout(initialLoadId);
-      window.clearInterval(pollId);
-    };
-  }, [fetchOrders]);
-
   const updateStatus = async (id: string, newStatus: OrderStatus) => {
-    setOrders((current) =>
-      current.map((order) =>
+    // Optimistic update
+    mutate(
+      orders.map((order) =>
         order.id === id ? { ...order, status: newStatus } : order
-      )
+      ),
+      false
     );
 
-    const response = await fetch("/api/admin/orders", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: newStatus }),
-    });
-
-    if (!response.ok) {
-      const payload = (await response.json()) as { error?: string };
-      alert(payload.error ?? "Error updating order");
-      void fetchOrders();
+    try {
+      await updateOrderStatusAction(id, newStatus);
+      mutate();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error updating order");
+      mutate(); // Revert on error
     }
   };
 
   const activeOrders = getActiveOrders(orders);
   const historyOrders = getHistoryOrders(orders, filter);
 
-  if (loading) {
+  if (isLoading && orders.length === 0) {
     return (
       <div className="p-10 text-center font-bold text-gray-500">
         Loading Dashboard...
@@ -112,12 +72,14 @@ export default function AdminPage() {
               </button>
             </Link>
 
-            <button
-              onClick={() => adminLogout()}
-              className="p-3 bg-red-100 text-red-600 rounded-full shadow-sm hover:bg-red-200 transition-all"
-            >
-              <LogOut size={20} />
-            </button>
+            <form action={adminLogout}>
+              <button
+                type="submit"
+                className="p-3 bg-red-100 text-red-600 rounded-full shadow-sm hover:bg-red-200 transition-all"
+              >
+                <LogOut size={20} />
+              </button>
+            </form>
           </div>
         </div>
 
@@ -149,3 +111,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

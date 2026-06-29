@@ -2,58 +2,32 @@
 
 import { useState, useEffect } from "react";
 import { Clock, CheckCircle, Package, Phone, RefreshCw } from "lucide-react";
-import type { Order, OrderStatus } from "@/src/types/models";
+import type { OrderStatus } from "@/src/types";
+import { useCustomerOrders } from "@/src/hooks/data/useCustomerOrders";
 
 export default function MyOrdersPage() {
-  // Keep initial state server/client identical to avoid hydration mismatch.
-  const [phone, setPhone] = useState("");
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const fetchOrders = async (phoneNumber: string) => {
-    if (phoneNumber.length < 10) return;
-    setLoading(true);
-    setSearched(true);
-    setErrorMessage(null);
-
-    localStorage.setItem("user_phone", phoneNumber);
-
-    const response = await fetch(
-      `/api/orders/lookup?phone=${encodeURIComponent(phoneNumber)}`,
-      { cache: "no-store" }
-    );
-    const payload = (await response.json()) as { orders?: Order[]; error?: string };
-
-    if (!response.ok) {
-      setErrorMessage(payload.error ?? "Unable to fetch orders right now.");
-      setOrders([]);
-      setLoading(false);
-      return;
-    }
-
-    setOrders(payload.orders ?? []);
-    setLoading(false);
-  };
+  const { orders, isLoading, error } = useCustomerOrders(searchPhone);
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("user_phone");
-    if (!savedPhone) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setPhone(savedPhone);
-      void fetchOrders(savedPhone);
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
+    if (savedPhone) {
+      setSearchInput(savedPhone);
+      setSearchPhone(savedPhone);
+      setHasSearched(true);
+    }
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    void fetchOrders(phone);
+    if (searchInput.length === 10) {
+      localStorage.setItem("user_phone", searchInput);
+      setSearchPhone(searchInput);
+      setHasSearched(true);
+    }
   };
 
   const getStatusColor = (status: OrderStatus) => {
@@ -85,31 +59,31 @@ export default function MyOrdersPage() {
                 type="tel"
                 placeholder="Enter Phone (e.g. 9876543210)"
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#f8f8f8] border-none font-bold text-[#3a2008] focus:ring-2 focus:ring-[#DA944B]"
-                value={phone}
+                value={searchInput}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setPhone(value);
+                  setSearchInput(value);
                 }}
                 maxLength={10}
               />
             </div>
             <button
               type="submit"
-              disabled={loading || phone.length < 10}
+              disabled={isLoading || searchInput.length < 10}
               className="w-full bg-[#653100] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-[#DA944B] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
             >
-              {loading ? <RefreshCw className="animate-spin" /> : "Find Orders"}
+              {isLoading ? <RefreshCw className="animate-spin" /> : "Find Orders"}
             </button>
           </form>
         </div>
 
-        {errorMessage && (
+        {error && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
-            {errorMessage}
+            {error.message}
           </div>
         )}
 
-        {searched && !loading && orders.length === 0 && !errorMessage && (
+        {hasSearched && !isLoading && orders.length === 0 && !error && (
           <div className="text-center py-10 opacity-50">
             <Package size={48} className="mx-auto mb-2 text-gray-300" />
             <p>No orders found for this number.</p>
@@ -170,3 +144,4 @@ export default function MyOrdersPage() {
     </div>
   );
 }
+

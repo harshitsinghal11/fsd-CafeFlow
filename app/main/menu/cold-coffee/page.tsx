@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import MenuItemCard from "@/src/component/MenuItemCard";
+﻿import { createClient } from "@supabase/supabase-js";
+import MenuItemCard from "@/src/components/feature/menu/MenuItemCard";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 

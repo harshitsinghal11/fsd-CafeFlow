@@ -54,7 +54,7 @@
 - `MenuCategoryCard`
 - `MenuItemCard`
 - `FloatingCart`
-- `CartTimer`
+- `cartTimer`
 - `ActiveOrderCard`
 - `OrderHistoryTable`
 - `OrderFilter`

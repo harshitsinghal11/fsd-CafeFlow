@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/src/store/cartStore";
-import CartTimer from "@/src/component/cartTimer";
+import CartTimer from "@/src/components/shared/CartTimer";
 import { Trash2, ArrowLeft, CheckCircle, Coffee } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,21 +59,17 @@ export default function CheckoutPage() {
       quantity: item.quantity
     }));
 
-    // 5. Place order through protected API route
-    const response = await fetch("/api/orders/place", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customer_name: name,
-        customer_phone: cleanPhone,
-        items: orderItems,
-        total_amount: Math.round(getTotalPrice()),
-      }),
+    // 5. Place order through Server Action
+    const { placeOrderAction } = await import("@/src/actions/orderActions");
+    const payload = await placeOrderAction({
+      customer_name: name,
+      customer_phone: cleanPhone,
+      items: orderItems,
+      total_amount: Math.round(getTotalPrice()),
     });
 
-    const payload = (await response.json()) as { order_no?: number; error?: string };
-    if (!response.ok || !payload.order_no) {
-      throw new Error(payload.error ?? "Unable to place order.");
+    if (!payload.order_no) {
+      throw new Error("Unable to place order.");
     }
 
     // 6. Success!
@@ -154,7 +150,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="font-bold text-gray-600">x{item.quantity}</span>
-                    <span className="font-bold text-[#653100]">₹{item.price * item.quantity}</span>
+                    <span className="font-bold text-[#653100]">â‚¹{item.price * item.quantity}</span>
                     <button
                       onClick={() => removeItem(item.id, item.size)}
                       className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
@@ -168,7 +164,7 @@ export default function CheckoutPage() {
               {/* Total Calculation */}
               <div className="bg-[#653100] text-[#ffffff] p-6 rounded-2xl shadow-lg mt-6 flex justify-between items-center">
                 <span className="opacity-80 font-medium">Total to Pay</span>
-                <span className="text-2xl font-black">₹{getTotalPrice()}</span>
+                <span className="text-2xl font-black">â‚¹{getTotalPrice()}</span>
               </div>
             </div>
           )}
@@ -247,3 +243,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
-import Navbar from "@/src/component/Navbar";
-import Footer from "@/src/component/Footer";
-import FloatingCart from "@/src/component/FloatingCart";
+﻿import Navbar from "@/src/components/layout/Navbar";
+import Footer from "@/src/components/layout/Footer";
+import FloatingCart from "@/src/components/shared/FloatingCart";
 
 export default function MainLayout({
   children,

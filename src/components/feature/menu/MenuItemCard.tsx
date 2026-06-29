@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 import { useCartStore } from "@/src/store/cartStore"; // <--- Import Store
-import type { MenuItem } from "@/src/types/models";
+import type { MenuItem } from "@/src/types";
 
 interface MenuItemProps {
   item: MenuItem;
@@ -48,7 +48,7 @@ export default function MenuItemCard({ item }: MenuItemProps) {
                 onClick={() => handleAdd("S", item.price_s)} // <--- CONNECTED
               >
                 <span className="text-[10px] font-bold text-gray-500 group-hover/btn:text-[#DA944B] uppercase">Regular</span>
-                <span className="text-sm font-black text-[#3a2008]">₹{item.price_s}</span>
+                <span className="text-sm font-black text-[#3a2008]">â‚¹{item.price_s}</span>
               </button>
 
               <button 
@@ -56,7 +56,7 @@ export default function MenuItemCard({ item }: MenuItemProps) {
                 onClick={() => handleAdd("L", largePrice)} // <--- CONNECTED
               >
                 <span className="text-[10px] font-bold opacity-80 uppercase">Large</span>
-                <span className="text-sm font-black">₹{largePrice}</span>
+                <span className="text-sm font-black">â‚¹{largePrice}</span>
               </button>
             </div>
           ) : (
@@ -67,7 +67,7 @@ export default function MenuItemCard({ item }: MenuItemProps) {
             >
               <span className="font-bold text-sm">Add to Order</span>
               <div className="bg-white/20 px-2 py-1 rounded text-sm font-black">
-                ₹{item.price_s}
+                â‚¹{item.price_s}
               </div>
             </button>
           )}
@@ -76,3 +76,4 @@ export default function MenuItemCard({ item }: MenuItemProps) {
     </div>
   );
 }
+

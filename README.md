@@ -66,15 +66,15 @@ The project is built as a single Next.js codebase that handles both the customer
 ```
 cafeflow/
 ├── app/
+│   ├── (auth)/
+│   │   └── login/                      # Admin PIN login page
 │   ├── api/
 │   │   ├── orders/
-│   │   │   ├── place/route.ts          # POST – validate & insert order
 │   │   │   └── lookup/route.ts         # GET  – phone-based order lookup
 │   │   └── admin/
-│   │       ├── orders/route.ts         # GET / PATCH – admin order management
+│   │       ├── orders/route.ts         # GET – admin order management
 │   │       └── analytics/route.ts      # GET – weekly sales data
 │   ├── admin/
-│   │   ├── login/                      # Admin PIN login page
 │   │   ├── page.tsx                    # Admin order dashboard
 │   │   └── analytics/                  # Weekly analytics page
 │   └── main/
@@ -85,24 +85,19 @@ cafeflow/
 │       ├── checkout/                   # Cart review & order placement
 │       └── my-orders/                  # Phone-based order tracking
 ├── src/
-│   ├── component/                      # Shared UI components
-│   │   ├── Navbar.tsx
-│   │   ├── Footer.tsx
-│   │   ├── FloatingCart.tsx
-│   │   ├── CartTimer.tsx
-│   │   ├── MenuCategoryCard.tsx
-│   │   ├── MenuItemCard.tsx
-│   │   ├── ActiveOrderCard.tsx
-│   │   ├── OrderHistoryTable.tsx
-│   │   └── OrderFilter.tsx
+│   ├── actions/                        # Server actions
+│   │   ├── authActions.ts
+│   │   └── orderActions.ts
+│   ├── components/                     # UI components
+│   │   ├── feature/
+│   │   │   ├── admin/                  # Admin-specific components
+│   │   │   └── menu/                   # Menu-specific components
+│   │   ├── layout/                     # Layout components (Navbar, Footer)
+│   │   └── shared/                     # Reusable elements (CartTimer, etc)
+│   ├── hooks/data/                     # SWR data fetching hooks
 │   ├── store/                          # Zustand cart store
 │   ├── types/                          # Shared TypeScript models
-│   └── utils/
-│       ├── supabasePublicServer.ts     # Anon-key server client
-│       ├── supabaseAdmin.ts            # Service-role server client
-│       ├── adminSession.ts             # Session cookie utilities
-│       ├── analytics.ts                # Weekly stats calculation
-│       └── orderFilters.ts             # Order filtering helpers
+│   └── lib/                            # Utilities and helpers
 ├── assets/
 │   └── DATABASE.sql                    # Schema, RLS policies & seed
 ├── proxy.ts                            # Admin route protection middleware

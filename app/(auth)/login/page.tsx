@@ -1,6 +1,6 @@
 "use client";
 
-import { adminLogin } from "@/src/actions";
+import { adminLogin } from "@/src/actions/authActions";
 import { Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";

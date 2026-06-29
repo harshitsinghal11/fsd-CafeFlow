@@ -1,5 +1,5 @@
-import { Filter, CheckCircle, Ban, Layers } from "lucide-react";
-import type { HistoryFilter } from "@/src/utils/orderFilters";
+﻿import { Filter, CheckCircle, Ban, Layers } from "lucide-react";
+import type { HistoryFilter } from "@/src/lib/orderFilters";
 
 interface Props {
   currentFilter: HistoryFilter;
@@ -50,3 +50,4 @@ export default function OrderFilter({ currentFilter, setFilter }: Props) {
     </div>  
   );
 }
+

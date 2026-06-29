@@ -1,5 +1,5 @@
-import { CheckCircle, Ban } from "lucide-react";
-import type { Order } from "@/src/types/models";
+﻿import { CheckCircle, Ban } from "lucide-react";
+import type { Order } from "@/src/types";
 
 interface Props {
   orders: Order[];
@@ -29,7 +29,7 @@ export default function OrderHistoryTable({ orders }: Props) {
               <td className="p-4 text-sm text-gray-600">
                 {order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
               </td>
-              <td className="p-4 font-bold text-gray-800">₹{order.total_amount}</td>
+              <td className="p-4 font-bold text-gray-800">â‚¹{order.total_amount}</td>
               <td className="p-4">
                 {order.status === "completed" ? (
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
@@ -57,3 +57,4 @@ export default function OrderHistoryTable({ orders }: Props) {
     </div>
   );
 }
+

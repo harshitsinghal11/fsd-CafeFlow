@@ -1,6 +1,6 @@
-import Footer from "@/src/component/Footer";
-import MenuCategoryCard from "@/src/component/MenuCategoryCard";
-import Navbar from "@/src/component/Navbar";
+﻿import Footer from "@/src/components/layout/Footer";
+import MenuCategoryCard from "@/src/components/feature/menu/MenuCategoryCard";
+import Navbar from "@/src/components/layout/Navbar";
 
 export default function Home() {
   return (
@@ -18,7 +18,7 @@ export default function Home() {
 
           {/* Sub-headline */}
           <p className="text-gray-600 text-lg md:text-xl font-medium max-w-2xl">
-            Because good coffee doesn’t need shortcuts.
+            Because good coffee doesnâ€™t need shortcuts.
           </p>
 
         </section>

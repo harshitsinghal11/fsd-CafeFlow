@@ -1,4 +1,4 @@
-import type { Order, OrderStatus } from "@/src/types/models";
+﻿import type { Order, OrderStatus } from "@/src/types";
 
 export type HistoryFilter = "all" | "completed" | "cancelled";
 
@@ -22,3 +22,4 @@ export function getHistoryOrders(orders: Order[], filter: HistoryFilter): Order[
     return order.status === filter;
   });
 }
+
