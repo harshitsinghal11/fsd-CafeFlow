@@ -1,19 +1,21 @@
 import useSWR from "swr";
 import { getInitialDailyStats, type AnalyticsStats } from "@/src/lib/analytics";
+import { fetchAnalyticsAction } from "@/src/actions/analyticsActions";
 
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (res.status === 401) {
-    window.location.href = "/login";
-    throw new Error("Unauthorized");
+const fetcher = async () => {
+  try {
+    const { stats } = await fetchAnalyticsAction();
+    return stats as AnalyticsStats;
+  } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      window.location.href = "/login";
+    }
+    throw error;
   }
-  const payload = await res.json();
-  if (!res.ok) throw new Error(payload.error ?? "Failed to load analytics.");
-  return payload.stats as AnalyticsStats;
 };
 
 export function useAnalytics() {
-  const { data, error, isLoading } = useSWR("/api/admin/analytics", fetcher);
+  const { data, error, isLoading } = useSWR("admin_analytics", fetcher);
 
   return {
     stats: data ?? { daily: getInitialDailyStats(), weekTotal: 0, weekCount: 0 },

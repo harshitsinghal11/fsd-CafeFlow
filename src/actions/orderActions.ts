@@ -78,3 +78,17 @@ export async function updateOrderStatusAction(id: string, status: OrderStatus) {
   if (error) throw new Error(error.message);
   return { success: true };
 }
+
+export async function fetchAdminOrdersAction() {
+  const isAdmin = await requireAdminSession();
+  if (!isAdmin) throw new Error("Unauthorized");
+
+  const supabaseAdmin = createSupabaseAdminClient();
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return { orders: data ?? [] };
+}

@@ -3,15 +3,10 @@
 import Link from "next/link";
 import { PackageOpen, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/src/store/cartStore";
-import { useEffect } from "react";
+import { useStore } from "@/src/hooks/useStore";
 
 export default function Navbar() {
-  useEffect(() => {
-    void useCartStore.persist?.rehydrate?.();
-  }, []);
-
-  const isHydrated = useCartStore.persist?.hasHydrated?.() ?? false;
-  const totalItems = useCartStore((state) => state.getTotalItems());
+  const totalItems = useStore(useCartStore, (state) => state.getTotalItems()) ?? 0;
 
   return (
     // Container: Transparent, Fixed at top
@@ -19,7 +14,6 @@ export default function Navbar() {
 
       {/* 1. CENTER: Brand Logo & Name */}
       <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity z-10">
-
         {/* Right: Brand Name */}
         <span className="text-2xl font-bold tracking-wide text-[#653100]">
           CafeFlow
@@ -43,14 +37,13 @@ export default function Navbar() {
           <ShoppingBag size={24} />
 
           {/* Badge: Show only if items exist */}
-          {isHydrated && totalItems > 0 && (
+          {totalItems > 0 && (
             <span className="absolute -top-2 -right-2 bg-[#DA944B] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm border border-white">
               {totalItems}
             </span>
           )}
         </div>
       </Link>
-
     </nav>
   );
 }

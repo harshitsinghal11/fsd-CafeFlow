@@ -11,13 +11,11 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
-  expiryTime: number | null; // New: Timestamp when cart expires
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: string, size: string) => void;
   increaseQuantity: (id: string, size: string) => void;
   decreaseQuantity: (id: string, size: string) => void;
   clearCart: () => void;
-  checkExpiry: () => boolean; // New: Function to check if time is up
   getTotalPrice: () => number;
   getTotalItems: () => number;
 }
@@ -26,16 +24,9 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      expiryTime: null,
 
       addItem: (newItem) => {
-        const { items, expiryTime } = get();
-        
-        // 1. START TIMER: If cart was empty, set timer for 10 minutes from now
-        let newExpiry = expiryTime;
-        if (items.length === 0) {
-          newExpiry = Date.now() + 10 * 60 * 1000; // 10 Minutes in milliseconds
-        }
+        const { items } = get();
 
         const existingItem = items.find(
           (i) => i.id === newItem.id && i.size === newItem.size
@@ -48,22 +39,15 @@ export const useCartStore = create<CartState>()(
                 ? { ...i, quantity: i.quantity + 1 }
                 : i
             ),
-            expiryTime: newExpiry,
           });
         } else {
-          set({ 
-            items: [...items, { ...newItem, quantity: 1 }],
-            expiryTime: newExpiry
-          });
+          set({ items: [...items, { ...newItem, quantity: 1 }] });
         }
       },
 
       removeItem: (id, size) => {
-        const newItems = get().items.filter((i) => !(i.id === id && i.size === size));
-        // If cart becomes empty, reset timer
-        set({ 
-          items: newItems,
-          expiryTime: newItems.length === 0 ? null : get().expiryTime
+        set({
+          items: get().items.filter((i) => !(i.id === id && i.size === size)),
         });
       },
 
@@ -94,17 +78,7 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      clearCart: () => set({ items: [], expiryTime: null }),
-
-      // NEW: Check if expired
-      checkExpiry: () => {
-        const { expiryTime, items } = get();
-        if (items.length > 0 && expiryTime && Date.now() > expiryTime) {
-          set({ items: [], expiryTime: null }); // Kill the cart
-          return true; // Yes, it expired
-        }
-        return false; // No, still valid
-      },
+      clearCart: () => set({ items: [] }),
 
       getTotalPrice: () => {
         return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
@@ -117,7 +91,6 @@ export const useCartStore = create<CartState>()(
     {
       name: 'arabica-cart-storage',
       storage: createJSONStorage(() => localStorage),
-      skipHydration: true,
     }
   )
 );

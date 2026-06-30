@@ -1,14 +1,10 @@
-﻿import { createClient } from "@supabase/supabase-js";
+import { createSupabasePublicServerClient } from "@/src/lib/supabasePublicServer";
 import MenuItemCard from "@/src/components/feature/menu/MenuItemCard";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default async function MocktailsPage() {
+  const supabase = createSupabasePublicServerClient();
   const { data: items } = await supabase
     .from("menu_items")
     .select("*")

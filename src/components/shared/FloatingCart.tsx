@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useStore } from "@/src/hooks/useStore";
 import { useCartStore } from "@/src/store/cartStore";
 
 export default function FloatingCart() {
-  useEffect(() => {
-    void useCartStore.persist?.rehydrate?.();
-  }, []);
-
-  const isHydrated = useCartStore.persist?.hasHydrated?.() ?? false;
-  const items = useCartStore((state) => state.items);
+  const items = useStore(useCartStore, (state) => state.items);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
 
   // If loading or cart is empty, hide it
-  if (!isHydrated || items.length === 0) return null;
+  if (!items || items.length === 0) return null;
 
   return (
     <div className="fixed bottom-4 left-0 right-0 px-4 max-w-lg mx-auto z-50">

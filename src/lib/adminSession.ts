@@ -1,3 +1,5 @@
+import { env } from "@/src/env";
+
 const encoder = new TextEncoder();
 
 export const ADMIN_SESSION_COOKIE_NAME = "admin_session";
@@ -5,16 +7,11 @@ export const ADMIN_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const SESSION_VERSION = "v1";
 
 function getAdminSessionSecret(): string {
-  return (
-    process.env.ADMIN_SESSION_SECRET ??
-    process.env.ADMIN_SECRET_PIN ??
-    process.env.ADMIN_PIN ??
-    ""
-  );
+  return env.COOKIE_SECRET;
 }
 
 export function getConfiguredAdminPin(): string {
-  return process.env.ADMIN_SECRET_PIN ?? process.env.ADMIN_PIN ?? "";
+  return env.ADMIN_PIN;
 }
 
 function bytesToHex(bytes: Uint8Array): string {

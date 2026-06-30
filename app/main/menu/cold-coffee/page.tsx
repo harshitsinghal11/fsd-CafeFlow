@@ -1,16 +1,11 @@
-﻿import { createClient } from "@supabase/supabase-js";
+import { createSupabasePublicServerClient } from "@/src/lib/supabasePublicServer";
 import MenuItemCard from "@/src/components/feature/menu/MenuItemCard";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-// Initialize Supabase (Server-side friendly)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-// Fetch data directly in the component (Server Component)
 export default async function ColdCoffeePage() {
+  const supabase = createSupabasePublicServerClient();
+  // We use the anon key here because menu_items is readable by public (anon)
   const { data: items } = await supabase
     .from("menu_items")
     .select("*")

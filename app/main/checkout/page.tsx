@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCartStore } from "@/src/store/cartStore";
-import CartTimer from "@/src/components/shared/CartTimer";
+import { useStore } from "@/src/hooks/useStore";
 import { Trash2, ArrowLeft, CheckCircle, Coffee } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,90 +11,87 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   // --- ZUSTAND STATE ---
-  const { items, removeItem, getTotalPrice, clearCart } = useCartStore();
+  const items = useStore(useCartStore, (state) => state.items);
+  const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const removeItem = useCartStore((state) => state.removeItem);
 
   // --- LOCAL STATE ---
   const [name, setName] = useState("");
   const [phone, setPhone] = useState(""); // Optional for tracking
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null); // Stores the Order No (e.g., 105)
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Fix Hydration Mismatch
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // --- SUBMIT ORDER LOGIC ---
- const handlePlaceOrder = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // 1. Validate Cart
-  if (items.length === 0) return;
+    // 1. Validate Cart
+    if (!items || items.length === 0) return;
 
-  // 2. Validate Name
-  if (!name.trim()) {
-    alert("Please enter your name!");
-    return;
-  }
-
-  // 3. Validate Phone (Strict 10 Digits)
-  // Ensure we strip spaces just in case
-  const cleanPhone = phone.replace(/\D/g, ''); 
-  if (cleanPhone.length !== 10) {
-    alert("Please enter a valid 10-digit phone number.");
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    // 4. Prepare Data
-    // We sanitize items to ensure they fit neatly into JSONB
-    const orderItems = items.map(item => ({
-      id: item.id,
-      name: item.name,
-      size: item.size,
-      price: item.price,
-      quantity: item.quantity
-    }));
-
-    // 5. Place order through Server Action
-    const { placeOrderAction } = await import("@/src/actions/orderActions");
-    const payload = await placeOrderAction({
-      customer_name: name,
-      customer_phone: cleanPhone,
-      items: orderItems,
-      total_amount: Math.round(getTotalPrice()),
-    });
-
-    if (!payload.order_no) {
-      throw new Error("Unable to place order.");
+    // 2. Validate Name
+    if (!name.trim()) {
+      alert("Please enter your name!");
+      return;
     }
 
-    // 6. Success!
-    setOrderSuccess(payload.order_no); // This comes from your 'order_no' column
+    // 3. Validate Phone (Strict 10 Digits)
+    // Ensure we strip spaces just in case
+    const cleanPhone = phone.replace(/\D/g, ''); 
+    if (cleanPhone.length !== 10) {
+      alert("Please enter a valid 10-digit phone number.");
+      return;
+    }
 
-    // 7. Clear the cart & timer
-    clearCart();
+    setLoading(true);
 
-    // 8. Save to Local History (For "My Orders" feature later)
-    const history = JSON.parse(localStorage.getItem("my_orders") || "[]");
-    // We save an object with ID and Date
-    history.push({ id: payload.order_no, date: new Date().toISOString() });
-    localStorage.setItem("my_orders", JSON.stringify(history));
+    try {
+      // 4. Prepare Data
+      // We sanitize items to ensure they fit neatly into JSONB
+      const orderItems = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        size: item.size,
+        price: item.price,
+        quantity: item.quantity
+      }));
 
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    console.error("Order Failed:", errorMessage);
-    alert("Order failed! " + errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+      // 5. Place order through Server Action
+      const { placeOrderAction } = await import("@/src/actions/orderActions");
+      const payload = await placeOrderAction({
+        customer_name: name,
+        customer_phone: cleanPhone,
+        items: orderItems,
+        total_amount: Math.round(getTotalPrice()),
+      });
+
+      if (!payload.order_no) {
+        throw new Error("Unable to place order.");
+      }
+
+      // 6. Success!
+      setOrderSuccess(payload.order_no); // This comes from your 'order_no' column
+
+      // 7. Clear the cart & timer
+      clearCart();
+
+      // 8. Save to Local History (For "My Orders" feature later)
+      const history = JSON.parse(localStorage.getItem("my_orders") || "[]");
+      // We save an object with ID and Date
+      history.push({ id: payload.order_no, date: new Date().toISOString() });
+      localStorage.setItem("my_orders", JSON.stringify(history));
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("Order Failed:", errorMessage);
+      alert("Order failed! " + errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- RENDER: LOADING / EMPTY STATE ---
-  if (!isMounted) return null;
+  if (!items) return null;
 
   // --- RENDER: SUCCESS SCREEN ---
   if (orderSuccess) {
@@ -134,7 +131,6 @@ export default function CheckoutPage() {
           <h2 className="text-2xl font-bold text-[#653100] flex items-center gap-2">
             <Coffee size={24} /> Your Items
           </h2>
-          {items.length > 0 && <CartTimer />}
           {items.length === 0 ? (
             <div className="text-center py-10 bg-white rounded-2xl shadow-sm border mt-4 border-gray-100">
               <p className="text-gray-400 mb-4">Your cart is empty.</p>
@@ -150,7 +146,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="font-bold text-gray-600">x{item.quantity}</span>
-                    <span className="font-bold text-[#653100]">â‚¹{item.price * item.quantity}</span>
+                    <span className="font-bold text-[#653100]">₹{item.price * item.quantity}</span>
                     <button
                       onClick={() => removeItem(item.id, item.size)}
                       className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
@@ -164,7 +160,7 @@ export default function CheckoutPage() {
               {/* Total Calculation */}
               <div className="bg-[#653100] text-[#ffffff] p-6 rounded-2xl shadow-lg mt-6 flex justify-between items-center">
                 <span className="opacity-80 font-medium">Total to Pay</span>
-                <span className="text-2xl font-black">â‚¹{getTotalPrice()}</span>
+                <span className="text-2xl font-black">₹{getTotalPrice()}</span>
               </div>
             </div>
           )}
@@ -243,4 +239,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-

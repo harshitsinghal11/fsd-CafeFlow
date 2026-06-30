@@ -1,19 +1,21 @@
 import useSWR from "swr";
 import type { Order } from "@/src/types";
+import { fetchAdminOrdersAction } from "@/src/actions/orderActions";
 
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (res.status === 401) {
-    window.location.href = "/login";
-    throw new Error("Unauthorized");
+const fetcher = async () => {
+  try {
+    const { orders } = await fetchAdminOrdersAction();
+    return orders as Order[];
+  } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      window.location.href = "/login";
+    }
+    throw error;
   }
-  const payload = await res.json();
-  if (!res.ok) throw new Error(payload.error ?? "Failed to fetch orders");
-  return payload.orders as Order[];
 };
 
 export function useOrders(refreshInterval = 5000) {
-  const { data, error, isLoading, mutate } = useSWR("/api/admin/orders", fetcher, {
+  const { data, error, isLoading, mutate } = useSWR("admin_orders", fetcher, {
     refreshInterval,
   });
 
