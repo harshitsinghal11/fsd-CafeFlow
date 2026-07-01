@@ -1,4 +1,4 @@
-# ☕ CafeFlow
+# CafeFlow
 
 > A single-cafe ordering system that moves browsing, ordering, token generation, and kitchen management into one responsive web application.
 
@@ -10,7 +10,7 @@ CafeFlow eliminates the friction of manual cafe ordering. Customers browse menu 
 
 Cafe staff get a PIN-protected admin dashboard to view active orders, update kitchen status in real time, and review weekly sales analytics — all without touching a third-party POS system.
 
-The project is built as a single Next.js codebase that handles both the customer-facing storefront and the protected admin backend through server-side API routes and Supabase PostgreSQL.
+The project is built as a single Next.js codebase that handles both the customer-facing storefront and the protected admin backend using Server Actions and Supabase PostgreSQL.
 
 ---
 
@@ -18,8 +18,8 @@ The project is built as a single Next.js codebase that handles both the customer
 
 **Customer Side**
 - Browse menu across three categories: Cold Coffee, Thick Shakes, and Mocktails
-- Persistent cart stored in local storage with a 10-minute inactivity timer
-- Checkout with name and phone number — no account required
+- Persistent cart stored securely in local storage
+- Checkout with name and phone number — no account required (with Zod validation)
 - Token number (`order_no`) displayed on successful order placement
 - Order history lookup by 10-digit phone number
 
@@ -41,7 +41,8 @@ The project is built as a single Next.js codebase that handles both the customer
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS 4 |
 | Database | Supabase PostgreSQL |
-| Supabase Client | `@supabase/supabase-js` |
+| Validation | Zod & React Hook Form |
+| Toasts | Sonner |
 | State Management | Zustand (persisted cart store) |
 | Icons | Lucide React |
 | Testing | Vitest |
@@ -68,24 +69,16 @@ cafeflow/
 ├── app/
 │   ├── (auth)/
 │   │   └── login/                      # Admin PIN login page
-│   ├── api/
-│   │   ├── orders/
-│   │   │   └── lookup/route.ts         # GET  – phone-based order lookup
-│   │   └── admin/
-│   │       ├── orders/route.ts         # GET – admin order management
-│   │       └── analytics/route.ts      # GET – weekly sales data
 │   ├── admin/
 │   │   ├── page.tsx                    # Admin order dashboard
 │   │   └── analytics/                  # Weekly analytics page
 │   └── main/
 │       ├── menu/
-│       │   ├── cold-coffee/            # Cold Coffee category page
-│       │   ├── thick-shakes/           # Thick Shakes category page
-│       │   └── mocktails/              # Mocktails category page
+│       │   └── [category]/             # Dynamic Category Route
 │       ├── checkout/                   # Cart review & order placement
 │       └── my-orders/                  # Phone-based order tracking
 ├── src/
-│   ├── actions/                        # Server actions
+│   ├── actions/                        # Server actions (lookup, admin, order)
 │   │   ├── authActions.ts
 │   │   └── orderActions.ts
 │   ├── components/                     # UI components

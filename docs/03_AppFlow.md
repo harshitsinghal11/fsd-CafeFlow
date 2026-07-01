@@ -48,7 +48,7 @@ CafeFlow has two main application areas: a customer ordering flow and an admin k
 - Order Confirmation
   The API inserts the order and returns `order_no`, and the checkout page shows the token confirmation view.
 - My Orders
-  Customer enters a phone number, and the page calls `GET /api/orders/lookup`.
+  Customer enters a phone number, and the page calls the `lookupOrderAction` Server Action.
 - Admin Order Management
   Admin dashboard loads all orders from `GET /api/admin/orders`, splits active and history views, and updates status through `PATCH /api/admin/orders`.
 - Admin Analytics
@@ -57,22 +57,19 @@ CafeFlow has two main application areas: a customer ordering flow and an admin k
 ## Data Flow
 - `menu_items` data flows from Supabase to server-rendered menu pages.
 - Cart data flows from user actions into the Zustand store and local storage.
-- Checkout form data flows from the browser to `POST /api/orders/place`, then to the `orders` table.
-- Order lookup data flows from the browser to `GET /api/orders/lookup`, then from the RPC function or fallback query back to the browser.
-- Admin dashboard data flows from the browser to protected admin APIs, then from the service-role Supabase client back to the browser.
-- Analytics data flows from completed `orders` rows through `calculateWeeklyStats` before rendering.
+- Checkout form data flows from the browser to the Server Action `placeOrderAction`, then to the `orders` table.
+- Order lookup data flows from the browser to the `lookupOrderAction` Server Action, then from the RPC function or fallback query back to the browser.
+- Admin dashboard and analytics data flows natively from Server Actions using the service-role Supabase client back to the browser.
 
 ## Error Handling Flow
-- Invalid checkout name or phone number is blocked before submission and again in the API.
+- Invalid checkout name or phone number is blocked before submission (client-side via react-hook-form) and again in the Server Action (via Zod).
 - Invalid lookup phone number returns a `400` response and shows an inline error message.
-- Failed order placement shows an alert on the checkout page.
+- Failed order placement shows a toast notification on the checkout page.
 - Unauthorized admin API calls return `401`, and the admin UI redirects to the login page.
 - Missing or invalid admin PIN returns `/admin/login?error=Invalid PIN`.
-- Cart expiry clears the cart, shows an alert, and sends the user back to the home page.
 
 ## Edge Cases
 - Empty cart at checkout.
-- Cart expiry after 10 minutes.
 - Invalid phone number input.
 - Blank customer name.
 - No menu items returned for a category.

@@ -96,8 +96,8 @@
 - Navigation actions stay accessible with fixed top placement and mobile-friendly icon buttons.
 
 ## Loading States
-- Admin dashboard shows `Loading Dashboard...` while fetching orders.
-- Admin analytics shows `Calculating Sales...` while loading stats.
+- Admin dashboard shows an animated `DashboardSkeleton` while fetching orders.
+- Admin analytics shows an animated `AnalyticsSkeleton` while loading stats.
 - Checkout submit button changes to `Placing Order...` while the order is being created.
 - My Orders button shows a spinner icon while fetching.
 
@@ -111,14 +111,13 @@
 ## Error States
 - Admin login displays invalid PIN feedback from the query string.
 - My Orders shows an inline red error box for lookup failures.
-- Checkout shows alert-based errors for failed order placement or invalid local validation.
-- Admin pages use alert-based errors for failed fetch or status updates.
+- Checkout uses inline validation text (via `react-hook-form`) and Sonner Toast notifications for failed order placement.
+- Admin pages use Sonner Toast notifications for failed fetch or status updates.
 - Dedicated error page system
   Project not supported.
 
 ## Accessibility Guidelines
 - Forms use standard inputs, buttons, and labels.
-- Required fields and phone patterns are enforced on customer and admin forms.
+- Required fields and phone patterns are strictly enforced.
 - Status uses both text and color to communicate state.
-- Keyboard, focus, and screen-reader audit documentation
-  Project not supported.
+- Icon-only buttons (like Trash, Back, Logout) use descriptive `aria-label` attributes for screen readers.

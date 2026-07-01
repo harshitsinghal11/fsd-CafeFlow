@@ -6,6 +6,17 @@ import { useStore } from "@/src/hooks/useStore";
 import { Trash2, ArrowLeft, CheckCircle, Coffee } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const checkoutSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(50),
+  phone: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -17,37 +28,28 @@ export default function CheckoutPage() {
   const removeItem = useCartStore((state) => state.removeItem);
 
   // --- LOCAL STATE ---
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState(""); // Optional for tracking
   const [loading, setLoading] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState<number | null>(null); // Stores the Order No (e.g., 105)
+  const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+    }
+  });
 
   // --- SUBMIT ORDER LOGIC ---
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 1. Validate Cart
+  const onSubmit = async (data: CheckoutFormValues) => {
     if (!items || items.length === 0) return;
-
-    // 2. Validate Name
-    if (!name.trim()) {
-      alert("Please enter your name!");
-      return;
-    }
-
-    // 3. Validate Phone (Strict 10 Digits)
-    // Ensure we strip spaces just in case
-    const cleanPhone = phone.replace(/\D/g, ''); 
-    if (cleanPhone.length !== 10) {
-      alert("Please enter a valid 10-digit phone number.");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      // 4. Prepare Data
-      // We sanitize items to ensure they fit neatly into JSONB
       const orderItems = items.map(item => ({
         id: item.id,
         name: item.name,
@@ -56,11 +58,10 @@ export default function CheckoutPage() {
         quantity: item.quantity
       }));
 
-      // 5. Place order through Server Action
       const { placeOrderAction } = await import("@/src/actions/orderActions");
       const payload = await placeOrderAction({
-        customer_name: name,
-        customer_phone: cleanPhone,
+        customer_name: data.name,
+        customer_phone: data.phone,
         items: orderItems,
         total_amount: Math.round(getTotalPrice()),
       });
@@ -69,22 +70,18 @@ export default function CheckoutPage() {
         throw new Error("Unable to place order.");
       }
 
-      // 6. Success!
-      setOrderSuccess(payload.order_no); // This comes from your 'order_no' column
-
-      // 7. Clear the cart & timer
+      setOrderSuccess(payload.order_no);
       clearCart();
 
-      // 8. Save to Local History (For "My Orders" feature later)
       const history = JSON.parse(localStorage.getItem("my_orders") || "[]");
-      // We save an object with ID and Date
       history.push({ id: payload.order_no, date: new Date().toISOString() });
       localStorage.setItem("my_orders", JSON.stringify(history));
 
+      toast.success("Order placed successfully!");
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       console.error("Order Failed:", errorMessage);
-      alert("Order failed! " + errorMessage);
+      toast.error("Order failed! " + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -150,6 +147,7 @@ export default function CheckoutPage() {
                     <button
                       onClick={() => removeItem(item.id, item.size)}
                       className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      aria-label={`Remove ${item.name} from cart`}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -170,13 +168,13 @@ export default function CheckoutPage() {
         <div className="order-1 md:order-2">
           <div className="bg-white p-6 md:p-8 rounded-[30px] shadow-xl border border-gray-100 sticky top-24">
             <div className="flex items-center gap-3 mb-8">
-              <Link href="/" className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+              <Link href="/" className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors" aria-label="Go back">
                 <ArrowLeft size={20} className="text-gray-600" />
               </Link>
               <h1 className="text-xl font-bold text-gray-800">Checkout Details</h1>
             </div>
 
-            <form onSubmit={handlePlaceOrder} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
               {/* Name Input */}
               <div>
@@ -185,12 +183,13 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="text"
-                  required // HTML5 validation
                   placeholder="e.g. John Doe"
-                  className="w-full bg-[#f8f8f8] border border-gray-200 rounded-xl px-4 py-3 font-bold text-[#3a2008] focus:outline-none focus:ring-2 focus:ring-[#DA944B]"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  className={`w-full bg-[#f8f8f8] border ${errors.name ? 'border-red-500' : 'border-gray-200'} rounded-xl px-4 py-3 font-bold text-[#3a2008] focus:outline-none focus:ring-2 focus:ring-[#DA944B]`}
+                  {...register("name")}
                 />
+                {errors.name && (
+                  <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
+                )}
               </div>
 
               {/* Phone Input (Strict 10 Digits) */}
@@ -200,22 +199,23 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="tel"
-                  required // HTML5 validation
-                  pattern="[0-9]{10}" // Regex: must be exactly 10 digits
                   maxLength={10} // Prevents typing more than 10
                   placeholder="e.g. 9876543210"
-                  title="Please enter a valid 10-digit mobile number"
-                  className="w-full bg-[#f8f8f8] border border-gray-200 rounded-xl px-4 py-3 font-medium text-[#3a2008] focus:outline-none focus:ring-2 focus:ring-[#DA944B]"
-                  value={phone}
-                  onChange={(e) => {
-                    // Logic: Allow only numbers and max 10 chars
-                    const val = e.target.value.replace(/\D/g, '');
-                    if (val.length <= 10) setPhone(val);
-                  }}
+                  className={`w-full bg-[#f8f8f8] border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-xl px-4 py-3 font-medium text-[#3a2008] focus:outline-none focus:ring-2 focus:ring-[#DA944B]`}
+                  {...register("phone", {
+                    onChange: (e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setValue("phone", val);
+                    }
+                  })}
                 />
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Required for order tracking (10 digits only).
-                </p>
+                {errors.phone ? (
+                  <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>
+                ) : (
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Required for order tracking (10 digits only).
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}

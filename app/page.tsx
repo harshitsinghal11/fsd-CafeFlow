@@ -18,7 +18,7 @@ export default function Home() {
 
           {/* Sub-headline */}
           <p className="text-gray-600 text-lg md:text-xl font-medium max-w-2xl">
-            Because good coffee doesnâ€™t need shortcuts.
+            Because good coffee doesn't need shortcuts.
           </p>
 
         </section>
@@ -58,7 +58,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <Footer/>
+      <Footer />
     </>
   );
 }

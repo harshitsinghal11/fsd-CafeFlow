@@ -8,12 +8,12 @@
 - Zustand for cart state
 - Vitest for unit tests
 - Lucide React for icons
+- Sonner for toast notifications
+- React Hook Form & Zod for form validation
 
 ## Project Structure
 - `app/`
   Contains route segments, layouts, pages, and API routes.
-- `app/api/`
-  Contains analytics and order GET endpoints.
 - `app/(auth)/`
   Contains the admin login page.
 - `app/admin/`
@@ -21,7 +21,7 @@
 - `app/main/`
   Contains customer menu, checkout, and my orders pages.
 - `src/actions/`
-  Contains server actions for admin login, logout, order placement, and status updates.
+  Contains server actions for admin login, logout, order placement, order lookup, status updates, and admin data fetching (orders, analytics).
 - `src/components/`
   Contains UI components split into `layout/`, `shared/`, `feature/menu/`, and `feature/admin/`.
 - `src/hooks/data/`
@@ -38,25 +38,19 @@
   Protects admin routes by validating the signed session cookie.
 
 ## System Architecture
-The application uses a single Next.js codebase for frontend pages and backend API routes. Customer menu pages read menu data from Supabase. Customer write and lookup actions go through local API routes. Admin pages call protected local API routes, which use the Supabase service role on the server. Supabase stores menu and order data.
+The application uses a single Next.js codebase for frontend pages and backend data operations. Customer menu pages read menu data from Supabase. Customer write actions and admin data fetching are executed natively via Next.js Server Actions. Supabase stores menu and order data.
 
 ## Frontend Architecture
 - The App Router handles page routing and layouts.
 - The landing page and menu pages are rendered through route-based pages.
 - Menu category pages are server components that query Supabase directly.
-- Checkout, My Orders, admin dashboard, and analytics are client components because they use browser state, fetch, and local storage.
+- Checkout, My Orders, admin dashboard, and analytics are client components.
 - Shared layout components include `Navbar`, `Footer`, and `FloatingCart`.
-- The cart is managed through a persisted Zustand store.
+- The cart is managed through a persisted Zustand store with a safe hydration hook (`useStore`).
+- Forms are validated client-side with `react-hook-form` and `zod`.
 
 ## Backend Architecture
-- `app/api/orders/place/route.ts`
-  Validates checkout payloads and inserts orders with the public Supabase client.
-- `app/api/orders/lookup/route.ts`
-  Validates phone input and returns orders using the RPC function, with a direct table fallback.
-- `app/api/admin/orders/route.ts`
-  Validates the admin session, returns all orders, and updates order status.
-- `app/api/admin/analytics/route.ts`
-  Validates the admin session, reads completed orders, and returns weekly stats.
+- Server Actions (`src/actions/orderActions.ts`, `lookupAction.ts`, and `src/actions/analyticsActions.ts`) handle data fetching and mutations, avoiding network overhead of traditional API routes.
 - `src/utils/supabasePublicServer.ts`
   Creates the anon-key server client.
 - `src/utils/supabaseAdmin.ts`
@@ -72,17 +66,11 @@ The application uses a single Next.js codebase for frontend pages and backend AP
 
 ## API Design Standards
 - All implemented APIs are same-origin Next.js route handlers.
-- Request and response bodies are JSON.
-- Input validation is handled inside each route.
-- Validation errors return `400`.
+- Input validation is handled via Zod schemas.
+- Most data operations use Next.js Server Actions instead of API routes.
 - Unauthorized admin access returns `401`.
-- Server or database failures return `500`.
 - Implemented routes:
-  - `POST /api/orders/place`
   - `GET /api/orders/lookup?phone=`
-  - `GET /api/admin/orders`
-  - `PATCH /api/admin/orders`
-  - `GET /api/admin/analytics`
 - API versioning
   Project not supported.
 

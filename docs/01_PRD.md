@@ -28,8 +28,7 @@ Manual cafe ordering creates queue delays, unclear kitchen handoff, and poor ord
 ## Core Features
 - Landing page with menu category navigation.
 - Category pages for Cold Coffee, Thick Shakes, and Mocktails.
-- Persistent cart using local storage.
-- Cart expiry timer set to 10 minutes.
+- Persistent cart using local storage (persists until order is placed).
 - Checkout with customer name and 10-digit phone number.
 - Token-based order confirmation using `order_no`.
 - My Orders page with phone-based lookup.
@@ -41,7 +40,7 @@ Manual cafe ordering creates queue delays, unclear kitchen handoff, and poor ord
 - The system must show three customer menu categories.
 - The system must fetch menu items from Supabase by category.
 - The cart must support add, remove, increase, decrease, clear, and total calculations.
-- The cart must expire automatically after 10 minutes of inactivity from first item add.
+- The cart must persist across browser sessions.
 - Checkout must reject empty carts, blank names, and invalid phone numbers.
 - Order placement must create a new `orders` row with `pending` status.
 - The system must return the generated `order_no` after successful checkout.

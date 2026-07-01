@@ -5,15 +5,13 @@ import Link from "next/link";
 import { DISPLAY_DAYS } from "@/src/lib/analytics";
 import { useAnalytics } from "@/src/hooks/data/useAnalytics";
 
+import AnalyticsSkeleton from "@/src/components/feature/admin/AnalyticsSkeleton";
+
 export default function AnalyticsPage() {
   const { stats, isLoading } = useAnalytics();
 
   if (isLoading) {
-    return (
-      <div className="p-10 text-center text-gray-500 font-bold">
-        Calculating Sales...
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   return (

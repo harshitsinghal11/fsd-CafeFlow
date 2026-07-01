@@ -13,8 +13,10 @@ import {
 import ActiveOrderCard from "@/src/components/feature/admin/ActiveOrderCard";
 import OrderHistoryTable from "@/src/components/feature/admin/OrderHistoryTable";
 import OrderFilter from "@/src/components/feature/admin/OrderFilter";
+import DashboardSkeleton from "@/src/components/feature/admin/DashboardSkeleton";
 import Link from "next/link";
 import { useOrders } from "@/src/hooks/data/useOrders";
+import { toast } from "sonner"; // Also add toast for update error
 
 export default function AdminPage() {
   const { orders, isLoading, mutate } = useOrders(5000);
@@ -32,8 +34,9 @@ export default function AdminPage() {
     try {
       await updateOrderStatusAction(id, newStatus);
       mutate();
+      toast.success(`Order #${id} updated to ${newStatus}`);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Error updating order");
+      toast.error(error instanceof Error ? error.message : "Error updating order");
       mutate(); // Revert on error
     }
   };
@@ -42,11 +45,7 @@ export default function AdminPage() {
   const historyOrders = getHistoryOrders(orders, filter);
 
   if (isLoading && orders.length === 0) {
-    return (
-      <div className="p-10 text-center font-bold text-gray-500">
-        Loading Dashboard...
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -76,6 +75,8 @@ export default function AdminPage() {
               <button
                 type="submit"
                 className="p-3 bg-red-100 text-red-600 rounded-full shadow-sm hover:bg-red-200 transition-all"
+                aria-label="Logout"
+                title="Logout"
               >
                 <LogOut size={20} />
               </button>
